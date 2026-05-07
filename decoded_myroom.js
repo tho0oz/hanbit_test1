@@ -441,7 +441,6 @@ function PixelArtProgress({ user, t }) {
   const art = ARTS[artIdx];
   const artLabel = ['하트', '로켓', '왕관'][artIdx];
 
-  // 레벨 기반 고정 시드 셔플 — 레벨이 같으면 항상 같은 순서로 해금
   const revealOrder = React.useMemo(() => {
     const arr = Array.from({ length: total }, (_, i) => i);
     let s = (user.level * 747796405 + 2891336453) | 0;
@@ -458,41 +457,89 @@ function PixelArtProgress({ user, t }) {
     [revealOrder, filled]
   );
 
+  // 픽셀 → 콘텐츠 매핑 (해금 순서 기준 round-robin)
+  const contentPool = [
+    ...RECENT_ITEMS.map(c => ({ title: c.title, progress: c.progress })),
+    ...RECOMMENDED.map(c => ({ title: c.title, progress: null, rating: c.rating })),
+  ];
+  const revealRank = React.useMemo(() => {
+    const map = {};
+    revealOrder.forEach((pixelIdx, rank) => { map[pixelIdx] = rank; });
+    return map;
+  }, [revealOrder]);
+
+  const [tooltip, setTooltip] = React.useState(null); // { idx, content, mx, my }
+
+  const CELL = 9, GAP = 2;
+
   return (
-    <div style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '20px 20px 16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: t.labelStrong }}>학습 픽셀 여정</span>
-          <span style={{ fontSize: 12, color: t.labelAlt, letterSpacing: '0.20px' }}>Lv.{user.level} — {artLabel}</span>
+    <div style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '-0.3px', color: t.labelStrong }}>학습 픽셀 여정</span>
+          <span style={{ fontSize: 11, color: t.labelAlt }}>Lv.{user.level} — {artLabel}</span>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: t.primary, letterSpacing: '0.30px' }}>{Math.round(progress * 100)}% 해금</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: t.primary }}>{Math.round(progress * 100)}% 해금</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, 1fr)`, gap: 3, marginBottom: 14 }}>
-        {Array.from({ length: ROWS }, (_, row) =>
-          Array.from({ length: COLS }, (_, col) => {
-            const idx = row * COLS + col;
-            const isRevealed = revealed.has(idx);
-            const pixelColor = art[row]?.[col];
-            return (
-              <div key={idx} style={{
-                aspectRatio: '1 / 1',
-                borderRadius: 2,
-                background: isRevealed
-                  ? (pixelColor ?? 'rgba(3,174,160,0.12)')
-                  : t.fillAlt,
-                transition: 'background 0.15s',
-              }} />
-            );
-          })
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}>
+          {Array.from({ length: ROWS }, (_, row) =>
+            Array.from({ length: COLS }, (_, col) => {
+              const idx = row * COLS + col;
+              const isRevealed = revealed.has(idx);
+              const pixelColor = art[row]?.[col];
+              const content = isRevealed ? contentPool[revealRank[idx] % contentPool.length] : null;
+              return (
+                <div key={idx}
+                  onMouseEnter={e => isRevealed && content && setTooltip({ idx, content, col, row })}
+                  onMouseLeave={() => setTooltip(null)}
+                  style={{
+                    width: CELL, height: CELL, borderRadius: 2,
+                    background: isRevealed ? (pixelColor ?? 'rgba(3,174,160,0.13)') : t.fillAlt,
+                    cursor: isRevealed ? 'default' : 'default',
+                    opacity: tooltip?.idx === idx ? 0.75 : 1,
+                    transition: 'opacity 0.1s',
+                  }}
+                />
+              );
+            })
+          )}
+        </div>
+
+        {/* 툴팁 */}
+        {tooltip && (
+          <div style={{
+            position: 'absolute',
+            left: tooltip.col * (CELL + GAP),
+            top: tooltip.row < ROWS / 2
+              ? (tooltip.row + 1) * (CELL + GAP) + 4
+              : tooltip.row * (CELL + GAP) - 50,
+            zIndex: 50,
+            background: t.labelNormal,
+            color: '#fff',
+            borderRadius: 7,
+            padding: '6px 10px',
+            fontSize: 11, fontWeight: 500,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: 2, letterSpacing: '0.20px' }}>{tooltip.content.title}</div>
+            <div style={{ opacity: 0.75, fontSize: 10, letterSpacing: '0.30px' }}>
+              {tooltip.content.progress != null
+                ? `${tooltip.content.progress}% 진행 중`
+                : `★ ${tooltip.content.rating}`}
+            </div>
+          </div>
         )}
       </div>
 
-      <div style={{ height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden', marginBottom: 6 }}>
+      <div style={{ height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden', marginTop: 10, marginBottom: 5 }}>
         <div style={{ height: '100%', width: `${progress * 100}%`, background: t.primary, borderRadius: 999 }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, letterSpacing: '0.34px', color: t.labelAssistive }}>
-        <span>{filled} / {total} 픽셀 해금됨</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, letterSpacing: '0.34px', color: t.labelAssistive }}>
+        <span>{filled} / {total} 픽셀</span>
         <span>다음 레벨까지 {user.xpMax - user.xp} XP</span>
       </div>
     </div>
