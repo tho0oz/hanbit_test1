@@ -183,136 +183,131 @@ function ProfileSidebar() {
 
 function MyHomePage({ dark, isSubscriber, setScreen }) {
   const t = TOKEN;
-  const card = (extra) => ({ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, ...extra });
+  const fg = dark ? '#E8E6E1' : '#030712';
+  const mutedFg = dark ? 'rgba(232,230,225,0.65)' : 'rgba(62,74,92,0.61)';
+  const borderCol = dark ? 'rgba(255,255,255,0.08)' : 'rgba(92,102,118,0.22)';
+  const bg = dark ? '#0F0F10' : '#ffffff';
 
-  const continueItems = RECENT_ITEMS.filter(i => i.progress < 100);
-  const completedItems = RECENT_ITEMS.filter(i => i.progress === 100);
+  const goDetail = () => setScreen('detail');
 
-  const ContentRow = ({ items, columns = 'repeat(2,1fr)', gap = 12 }) => (
-    <div style={{ display: 'grid', gridTemplateColumns: columns, gap }}>
-      {items.map((item, i) => (
-        <button key={i} onClick={() => setScreen('detail')} style={{
-          ...card({ padding: 16 }), cursor: 'pointer', fontFamily: 'inherit',
-          textAlign: 'left', display: 'flex', gap: 14, alignItems: 'flex-start',
-        }}>
-          <div style={{
-            width: 44, height: 60, borderRadius: 6, flexShrink: 0,
-            background: `linear-gradient(150deg, ${item.color || KIND_COLOR[item.kind]}cc, ${item.color || KIND_COLOR[item.kind]}55)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-          }}>{item.kind === 'course' ? '▶️' : '📖'}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{
-                fontSize: 10, fontWeight: 600, letterSpacing: '0.34px', padding: '2px 6px',
-                borderRadius: 4, background: `${KIND_COLOR[item.kind]}18`, color: KIND_COLOR[item.kind],
-              }}>{KIND_LABEL[item.kind]}</span>
-            </div>
-            <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 600, lineHeight: 1.429, letterSpacing: '0.20px', color: t.labelNormal, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</p>
-            <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 400, lineHeight: 1.334, letterSpacing: '0.30px', color: t.labelAlt }}>{item.author}</p>
-            {item.progress !== undefined && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1, height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${item.progress}%`, borderRadius: 999, background: item.progress === 100 ? t.primary : item.color }} />
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.34px', color: item.progress === 100 ? t.primary : t.labelAlt, flexShrink: 0 }}>
-                  {item.progress === 100 ? '완독 ✓' : `${item.progress}%`}
-                </span>
-              </div>
-            )}
-          </div>
-        </button>
-      ))}
+  // 이어보기: recent items converted to ListCard format
+  const continueCards = RECENT_ITEMS
+    .filter(i => i.progress < 100)
+    .map(i => ({ title: i.title, subtitle: i.author, kinds: [i.kind], rating: 4.7, reviews: 0, tags: [], _progress: i.progress, _color: i.color }));
+
+  // AI 추천: use REC_POOL (globally available from recommend page)
+  const aiRec = typeof REC_POOL !== 'undefined' ? REC_POOL.slice(0, 5) : [];
+  // 이 분야도: rest of REC_POOL
+  const algoRec = typeof REC_POOL !== 'undefined' ? REC_POOL.slice(5) : [];
+
+  const SectionHeader = ({ title, sub, onMore }) => (
+    <div style={{
+      display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+      marginBottom: 24, paddingBottom: 14, borderBottom: `1px solid ${borderCol}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.43px', color: fg }}>{title}</h2>
+        {sub && <span style={{ fontSize: 13, fontWeight: 400, color: mutedFg, letterSpacing: '0.20px' }}>{sub}</span>}
+      </div>
+      {onMore && (
+        <button onClick={onMore} style={{
+          background: 'none', border: 'none', color: t.primary,
+          fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          fontFamily: 'inherit', letterSpacing: '0.20px',
+        }}>전체 보기 →</button>
+      )}
     </div>
   );
 
-  const RecommendRow = ({ items }) => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-      {items.map((item, i) => (
-        <button key={i} onClick={() => setScreen('detail')} style={{
-          ...card({ padding: 16 }), cursor: 'pointer', fontFamily: 'inherit',
-          textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 10,
-        }}>
-          <div style={{
-            width: '100%', height: 72, borderRadius: 8,
-            background: `linear-gradient(135deg, ${KIND_COLOR[item.kind]}22, ${KIND_COLOR[item.kind]}08)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
-          }}>{item.kind === 'course' ? '▶️' : '📚'}</div>
-          <div>
-            <span style={{
-              fontSize: 10, fontWeight: 600, letterSpacing: '0.34px', padding: '2px 6px',
-              borderRadius: 4, background: `${KIND_COLOR[item.kind]}18`, color: KIND_COLOR[item.kind],
-              marginBottom: 6, display: 'inline-block',
-            }}>{KIND_LABEL[item.kind]}</span>
-            <p style={{ margin: '4px 0 2px', fontSize: 13, fontWeight: 600, lineHeight: 1.385, letterSpacing: '0.25px', color: t.labelNormal }}>{item.title}</p>
-            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 400, letterSpacing: '0.34px', color: t.labelAlt }}>{item.author}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {item.tags.slice(0, 2).map(tag => (
-                  <span key={tag} style={{
-                    fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 4,
-                    background: t.fillNormal, color: t.labelAlt, letterSpacing: '0.30px',
-                  }}>#{tag}</span>
-                ))}
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#f0b100', letterSpacing: '0.34px' }}>★ {item.rating}</span>
-            </div>
+  // Card with optional progress bar — wraps ListCard visually
+  const HomeCard = ({ c, progress, color }) => (
+    <div onClick={goDetail} style={{ cursor: 'pointer' }}
+      onMouseEnter={e => { const cover = e.currentTarget.querySelector('.hb-list-cover'); if (cover) cover.style.transform = 'translateY(-4px)'; }}
+      onMouseLeave={e => { const cover = e.currentTarget.querySelector('.hb-list-cover'); if (cover) cover.style.transform = 'translateY(0)'; }}
+    >
+      <div className="hb-list-cover" style={{ marginBottom: 14, transition: 'transform 0.15s', position: 'relative' }}>
+        <BookCover title={c.title} subtitle={c.subtitle} width={160} height={228} kind={c.kinds[0] === 'course' ? 'course' : 'book'} />
+        {progress !== undefined && (
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: 'rgba(0,0,0,0.15)', borderRadius: '0 0 4px 4px' }}>
+            <div style={{ height: '100%', width: `${progress}%`, background: t.primary, borderRadius: '0 0 0 4px' }} />
           </div>
-        </button>
-      ))}
-    </div>
-  );
-
-  const SectionHeader = ({ title, sub }) => (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
-      <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.4px', color: t.labelStrong }}>{title}</h2>
-      {sub && <span style={{ fontSize: 13, fontWeight: 400, letterSpacing: '0.25px', color: t.labelAlt }}>{sub}</span>}
+        )}
+      </div>
+      <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 3px', letterSpacing: '-0.3px', lineHeight: 1.3, whiteSpace: 'pre-line', color: fg }}>{c.title}</h4>
+      <div style={{ fontSize: 13, color: mutedFg, marginBottom: 4, letterSpacing: '0.20px' }}>{c.subtitle}</div>
+      {progress !== undefined && (
+        <div style={{ fontSize: 11, fontWeight: 600, color: t.primary, letterSpacing: '0.34px' }}>{progress}% 진행 중</div>
+      )}
+      {progress === undefined && c.rating > 0 && (
+        <div style={{ fontSize: 12, color: mutedFg }}>
+          <span style={{ color: '#f0b100', fontWeight: 700 }}>★ {c.rating}</span>
+          {c.reviews > 0 && <span style={{ marginLeft: 4, opacity: 0.7 }}>({c.reviews.toLocaleString()})</span>}
+        </div>
+      )}
     </div>
   );
 
   return (
-    <div style={{ background: t.bgAlt, color: t.labelNormal, minHeight: '100vh', fontFamily: 'Pretendard, sans-serif' }}>
+    <div style={{ background: bg, color: fg, fontFamily: 'Pretendard, sans-serif', minHeight: '100vh' }}>
       <LoggedInGNB activeScreen="myhome" setScreen={setScreen} />
 
-      {/* 인사 배너 */}
-      <div style={{ background: `linear-gradient(120deg, ${t.primary}18, ${t.primaryTint} 60%, transparent)`, borderBottom: `1px solid ${t.lineAlt}` }}>
-        <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 48px' }}>
-          <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 500, letterSpacing: '0.25px', color: t.primaryHeavy }}>안녕하세요, {USER.name}님 👋</p>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px', color: t.labelStrong }}>오늘도 학습을 이어볼까요?</h1>
+      {/* 페이지 헤더 */}
+      <div style={{ borderBottom: `1px solid ${borderCol}`, background: dark ? '#141416' : '#f3f4f6' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto', padding: '40px 48px 28px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: t.primary, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>My Home</div>
+          <h1 style={{ fontSize: 'clamp(28px, 3.5vw, 38px)', fontWeight: 800, letterSpacing: '-0.66px', lineHeight: 1.2, margin: '0 0 8px' }}>
+            안녕하세요, {USER.name}님
+          </h1>
+          <p style={{ margin: 0, fontSize: 15, color: mutedFg, letterSpacing: '0.20px' }}>
+            내 학습 패턴에 맞게 큐레이션된 콘텐츠예요.
+          </p>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 48px 100px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 44 }}>
+      {/* 본문 */}
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '48px 48px 100px', display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+
+        {/* 좌측 콘텐츠 */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 60 }}>
 
           {/* 이어보기 */}
-          {continueItems.length > 0 && (
+          {continueCards.length > 0 && (
             <section>
               <SectionHeader title="이어보기" sub="최근 본 콘텐츠" />
-              <ContentRow items={continueItems} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '32px 20px' }}>
+                {continueCards.map((c, i) => (
+                  <HomeCard key={i} c={c} progress={c._progress} color={c._color} />
+                ))}
+              </div>
             </section>
           )}
 
-          {/* AI 추천 */}
-          <section>
-            <SectionHeader title="AI 맞춤 추천" sub="내 학습 패턴 분석 기반" />
-            <RecommendRow items={RECOMMENDED.slice(0, 3)} />
-          </section>
-
-          {/* 인기 급상승 */}
-          <section>
-            <SectionHeader title="이 분야도 관심 있으실까요?" sub="알고리즘 기반" />
-            <RecommendRow items={RECOMMENDED.slice(3, 6)} />
-          </section>
-
-          {/* 완독 기록 */}
-          {completedItems.length > 0 && (
+          {/* AI 맞춤 추천 */}
+          {aiRec.length > 0 && (
             <section>
-              <SectionHeader title="완료한 콘텐츠" />
-              <ContentRow items={completedItems} />
+              <SectionHeader title="AI 맞춤 추천" sub="내 학습 패턴 분석 기반" onMore={() => setScreen('list')} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '32px 20px' }}>
+                {aiRec.map((c, i) => (
+                  <HomeCard key={i} c={{ ...c, subtitle: c.subtitle }} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 이 분야도 관심 있으실까요 */}
+          {algoRec.length > 0 && (
+            <section>
+              <SectionHeader title="이 분야도 관심 있으실까요?" sub="알고리즘 기반" onMore={() => setScreen('list')} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '32px 20px' }}>
+                {algoRec.map((c, i) => (
+                  <HomeCard key={i} c={{ ...c, subtitle: c.subtitle }} />
+                ))}
+              </div>
             </section>
           )}
         </div>
 
+        {/* 우측 고정 사이드바 */}
         <ProfileSidebar />
       </div>
     </div>
