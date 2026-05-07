@@ -369,136 +369,152 @@ function MyHomePage({ dark, isSubscriber, setScreen }) {
 }
 
 function PixelArtProgress({ user, t }) {
-  const COLS = 16, ROWS = 16;
+  const COLS = 16, ROWS = 16, CELL = 9, GAP = 2;
   const total = COLS * ROWS;
-  const progress = user.xp / user.xpMax;
-  const filled = Math.round(progress * total);
 
   const P = { T:'#03aea0', D:'#028b80', L:'#9fe3df', R:'#ff6900', Y:'#f0b100', O:'#6257e3', _:null };
   const decode = rows => rows.map(r => [...r].map(c => P[c] ?? null));
 
-  const ARTS = [
-    // Lv 1-2: 하트
-    decode([
-      '________________',
-      '________________',
-      '___TTT___TTT____',
-      '__TTTTT_TTTTT___',
-      '__TTTTTTTTTTT___',
-      '__TTTTTTTTTTT___',
-      '___TTTTTTTTT____',
-      '____TTTTTTT_____',
-      '_____TTTTT______',
-      '______TTT_______',
-      '_______T________',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-    ]),
-    // Lv 3-4: 로켓 (탐험가)
-    decode([
-      '________________',
-      '_______TT_______',
-      '______TTTT______',
-      '_____TTTTTT_____',
-      '____TTLLLLTT____',
-      '____TTLLLLTT____',
-      '____TTTTTTTT____',
-      '___TTTTTTTTTT___',
-      '__TTTTTTTTTTTT__',
-      '___TTTTTTTTTT___',
-      '___TT______TT___',
-      '___RYYYY_YYYY___',
-      '___RRRR___RRR___',
-      '________________',
-      '________________',
-      '________________',
-    ]),
-    // Lv 5+: 왕관
-    decode([
-      '________________',
-      '__Y___Y___Y_____',
-      '__YY_YYY_YY_____',
-      '__YYYYYYYYY_____',
-      '__YYYYYYYYY_____',
-      '__YTYYTYYTY_____',
-      '__YYYYYYYYY_____',
-      '__YYYYYYYYY_____',
-      '___YYYYYYY______',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-      '________________',
-    ]),
+  // 레벨별 개별 픽셀아트
+  const LEVEL_ARTS = [
+    { level: 1, name: '하트', art: decode([
+      '________________', '________________',
+      '___TTT___TTT____', '__TTTTT_TTTTT___',
+      '__TTTTTTTTTTT___', '__TTTTTTTTTTT___',
+      '___TTTTTTTTT____', '____TTTTTTT_____',
+      '_____TTTTT______', '______TTT_______',
+      '_______T________', '________________',
+      '________________', '________________',
+      '________________', '________________',
+    ]) },
+    { level: 2, name: '다이아', art: decode([
+      '________________', '________________',
+      '_____TTTTT______', '____TTTTTTT_____',
+      '___TTTLLLTTT____', '__TTTLLLLLTT____',
+      '_TTTTTTTTTTTTT__', '_TTTTTTTTTTTTT__',
+      '__TTTTTTTTTTT___', '___TTTTTTTTT____',
+      '____TTTTTTT_____', '_____TTTTT______',
+      '______TTT_______', '_______T________',
+      '________________', '________________',
+    ]) },
+    { level: 3, name: '로켓', art: decode([
+      '________________', '_______TT_______',
+      '______TTTT______', '_____TTTTTT_____',
+      '____TTLLLLTT____', '____TTLLLLTT____',
+      '____TTTTTTTT____', '___TTTTTTTTTT___',
+      '__TTTTTTTTTTTT__', '___TTTTTTTTTT___',
+      '___TT______TT___', '___RYYYY_YYYY___',
+      '___RRRR___RRR___', '________________',
+      '________________', '________________',
+    ]) },
+    { level: 4, name: '왕관', art: decode([
+      '________________', '_Y___Y___Y______',
+      '_YY_YYY_YY______', '_YYYYYYYYY______',
+      '_YYYYYYYYY______', '_YTYYTYYTYYY____',
+      '_YYYYYYYYY______', '_YYYYYYYYY______',
+      '__YYYYYYY_______', '________________',
+      '________________', '________________',
+      '________________', '________________',
+      '________________', '________________',
+    ]) },
+    { level: 5, name: '트로피', art: decode([
+      '________________', '__TTTTTTTTTTT___',
+      '__TTTTTTTTTTT___', '___TTTTTTTTT____',
+      '___TTTTTTTTT____', '____TTTTTTT_____',
+      '_____TTTTT______', '_____TTTTT______',
+      '______TTT_______', '______TTT_______',
+      '___TTTTTTTTT____', '__TTTTTTTTTTT___',
+      '________________', '________________',
+      '________________', '________________',
+    ]) },
   ];
 
-  const artIdx = user.level <= 2 ? 0 : user.level <= 4 ? 1 : 2;
-  const art = ARTS[artIdx];
-  const artLabel = ['하트', '로켓', '왕관'][artIdx];
+  // 레벨별 시드 기반 reveal 순서 (메모이즈)
+  const revealOrders = React.useMemo(() =>
+    LEVEL_ARTS.map(({ level }) => {
+      const arr = Array.from({ length: total }, (_, i) => i);
+      let s = (level * 747796405 + 2891336453) | 0;
+      for (let i = arr.length - 1; i > 0; i--) {
+        s = Math.imul(s, 1664525) + 1013904223 | 0;
+        const j = (s >>> 0) % (i + 1);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }),
+  []);
 
-  const revealOrder = React.useMemo(() => {
-    const arr = Array.from({ length: total }, (_, i) => i);
-    let s = (user.level * 747796405 + 2891336453) | 0;
-    for (let i = arr.length - 1; i > 0; i--) {
-      s = Math.imul(s, 1664525) + 1013904223 | 0;
-      const j = (s >>> 0) % (i + 1);
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }, [user.level]);
+  const getFilledCount = (artLevel) => {
+    if (artLevel < user.level) return total;
+    if (artLevel === user.level) return Math.round((user.xp / user.xpMax) * total);
+    return 0;
+  };
 
-  const revealed = React.useMemo(
-    () => new Set(revealOrder.slice(0, filled)),
-    [revealOrder, filled]
-  );
+  const [currentIdx, setCurrentIdx] = React.useState(user.level - 1);
+  const [paused, setPaused] = React.useState(false);
+  const [tooltip, setTooltip] = React.useState(null);
 
-  // 픽셀 → 콘텐츠 매핑 (해금 순서 기준 round-robin)
+  // 자동 롤링
+  React.useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setCurrentIdx(i => (i + 1) % LEVEL_ARTS.length), 3000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  const cur = LEVEL_ARTS[currentIdx];
+  const curFilled = getFilledCount(cur.level);
+  const revealed = new Set(revealOrders[currentIdx].slice(0, curFilled));
+  const revealRankMap = {};
+  revealOrders[currentIdx].forEach((px, rank) => { revealRankMap[px] = rank; });
+
+  const isCompleted = cur.level < user.level;
+  const isCurrent   = cur.level === user.level;
+  const isLocked    = cur.level > user.level;
+
   const contentPool = [
     ...RECENT_ITEMS.map(c => ({ title: c.title, progress: c.progress })),
     ...RECOMMENDED.map(c => ({ title: c.title, progress: null, rating: c.rating })),
   ];
-  const revealRank = React.useMemo(() => {
-    const map = {};
-    revealOrder.forEach((pixelIdx, rank) => { map[pixelIdx] = rank; });
-    return map;
-  }, [revealOrder]);
-
-  const [tooltip, setTooltip] = React.useState(null); // { idx, content, mx, my }
-
-  const CELL = 9, GAP = 2;
 
   return (
-    <div style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+    <div
+      style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '16px' }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => { setPaused(false); setTooltip(null); }}
+    >
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '-0.3px', color: t.labelStrong }}>학습 픽셀 여정</span>
-          <span style={{ fontSize: 11, color: t.labelAlt }}>Lv.{user.level} — {artLabel}</span>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+            background: isCompleted ? `${t.primary}18` : isCurrent ? 'rgba(240,177,0,0.12)' : t.fillAlt,
+            color: isCompleted ? t.primaryHeavy : isCurrent ? '#a07000' : t.labelAssistive,
+          }}>{isCompleted ? '완료 ✓' : isCurrent ? '진행 중' : '잠김 🔒'}</span>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: t.primary }}>{Math.round(progress * 100)}% 해금</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: isLocked ? t.labelAssistive : t.primary }}>
+          Lv.{cur.level} {cur.name}
+        </span>
       </div>
 
-      <div style={{ position: 'relative', display: 'inline-block' }}>
+      {/* 픽셀 그리드 */}
+      <div style={{ position: 'relative', display: 'inline-block', marginBottom: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}>
           {Array.from({ length: ROWS }, (_, row) =>
             Array.from({ length: COLS }, (_, col) => {
               const idx = row * COLS + col;
               const isRevealed = revealed.has(idx);
-              const pixelColor = art[row]?.[col];
-              const content = isRevealed ? contentPool[revealRank[idx] % contentPool.length] : null;
+              const pixelColor = cur.art[row]?.[col];
+              const content = isRevealed ? contentPool[revealRankMap[idx] % contentPool.length] : null;
               return (
                 <div key={idx}
-                  onMouseEnter={e => isRevealed && content && setTooltip({ idx, content, col, row })}
+                  onMouseEnter={() => !isLocked && isRevealed && content && setTooltip({ idx, content, col, row })}
                   onMouseLeave={() => setTooltip(null)}
                   style={{
                     width: CELL, height: CELL, borderRadius: 2,
-                    background: isRevealed ? (pixelColor ?? 'rgba(3,174,160,0.13)') : t.fillAlt,
-                    cursor: isRevealed ? 'default' : 'default',
-                    opacity: tooltip?.idx === idx ? 0.75 : 1,
+                    background: isLocked
+                      ? t.fillAlt
+                      : isRevealed ? (pixelColor ?? 'rgba(3,174,160,0.13)') : 'rgba(92,102,118,0.07)',
+                    opacity: tooltip?.idx === idx ? 0.7 : 1,
                     transition: 'opacity 0.1s',
                   }}
                 />
@@ -507,40 +523,68 @@ function PixelArtProgress({ user, t }) {
           )}
         </div>
 
+        {/* 잠금 오버레이 */}
+        {isLocked && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(255,255,255,0.55)', borderRadius: 4, fontSize: 22,
+          }}>🔒</div>
+        )}
+
         {/* 툴팁 */}
         {tooltip && (
           <div style={{
             position: 'absolute',
-            left: tooltip.col * (CELL + GAP),
+            left: Math.min(tooltip.col * (CELL + GAP), COLS * (CELL + GAP) - 140),
             top: tooltip.row < ROWS / 2
               ? (tooltip.row + 1) * (CELL + GAP) + 4
-              : tooltip.row * (CELL + GAP) - 50,
+              : tooltip.row * (CELL + GAP) - 52,
             zIndex: 50,
-            background: t.labelNormal,
-            color: '#fff',
-            borderRadius: 7,
-            padding: '6px 10px',
-            fontSize: 11, fontWeight: 500,
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+            background: '#030712', color: '#fff',
+            borderRadius: 7, padding: '6px 10px',
+            fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap',
+            pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
           }}>
-            <div style={{ fontWeight: 700, marginBottom: 2, letterSpacing: '0.20px' }}>{tooltip.content.title}</div>
-            <div style={{ opacity: 0.75, fontSize: 10, letterSpacing: '0.30px' }}>
-              {tooltip.content.progress != null
-                ? `${tooltip.content.progress}% 진행 중`
-                : `★ ${tooltip.content.rating}`}
+            <div style={{ fontWeight: 700, marginBottom: 2 }}>{tooltip.content.title}</div>
+            <div style={{ opacity: 0.7, fontSize: 10 }}>
+              {tooltip.content.progress != null ? `${tooltip.content.progress}% 진행 중` : `★ ${tooltip.content.rating}`}
             </div>
           </div>
         )}
       </div>
 
-      <div style={{ height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden', marginTop: 10, marginBottom: 5 }}>
-        <div style={{ height: '100%', width: `${progress * 100}%`, background: t.primary, borderRadius: 999 }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, letterSpacing: '0.34px', color: t.labelAssistive }}>
-        <span>{filled} / {total} 픽셀</span>
-        <span>다음 레벨까지 {user.xpMax - user.xp} XP</span>
+      {/* 진행 바 (현재 레벨만) */}
+      {isCurrent && (
+        <>
+          <div style={{ height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden', marginBottom: 4 }}>
+            <div style={{ height: '100%', width: `${(user.xp / user.xpMax) * 100}%`, background: t.primary, borderRadius: 999 }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: t.labelAssistive, marginBottom: 10 }}>
+            <span>{curFilled} / {total} 픽셀</span>
+            <span>다음 레벨까지 {user.xpMax - user.xp} XP</span>
+          </div>
+        </>
+      )}
+      {isCompleted && (
+        <div style={{ fontSize: 10, color: t.primary, fontWeight: 600, marginBottom: 10 }}>✓ {total} / {total} 픽셀 완성</div>
+      )}
+      {isLocked && (
+        <div style={{ fontSize: 10, color: t.labelAssistive, marginBottom: 10 }}>Lv.{cur.level} 달성 시 해금</div>
+      )}
+
+      {/* 도트 네비게이션 */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+        {LEVEL_ARTS.map((a, i) => (
+          <button key={i} onClick={() => setCurrentIdx(i)} style={{
+            width: i === currentIdx ? 16 : 6, height: 6, borderRadius: 999,
+            border: 'none', cursor: 'pointer', padding: 0,
+            background: i === currentIdx
+              ? t.primary
+              : a.level < user.level ? `${t.primary}60` : t.fillNormal,
+            transition: 'width 0.25s, background 0.2s',
+          }} />
+        ))}
       </div>
     </div>
   );
