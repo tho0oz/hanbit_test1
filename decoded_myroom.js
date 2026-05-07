@@ -368,6 +368,137 @@ function MyHomePage({ dark, isSubscriber, setScreen }) {
   );
 }
 
+function PixelArtProgress({ user, t }) {
+  const COLS = 16, ROWS = 16;
+  const total = COLS * ROWS;
+  const progress = user.xp / user.xpMax;
+  const filled = Math.round(progress * total);
+
+  const P = { T:'#03aea0', D:'#028b80', L:'#9fe3df', R:'#ff6900', Y:'#f0b100', O:'#6257e3', _:null };
+  const decode = rows => rows.map(r => [...r].map(c => P[c] ?? null));
+
+  const ARTS = [
+    // Lv 1-2: 하트
+    decode([
+      '________________',
+      '________________',
+      '___TTT___TTT____',
+      '__TTTTT_TTTTT___',
+      '__TTTTTTTTTTT___',
+      '__TTTTTTTTTTT___',
+      '___TTTTTTTTT____',
+      '____TTTTTTT_____',
+      '_____TTTTT______',
+      '______TTT_______',
+      '_______T________',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+    ]),
+    // Lv 3-4: 로켓 (탐험가)
+    decode([
+      '________________',
+      '_______TT_______',
+      '______TTTT______',
+      '_____TTTTTT_____',
+      '____TTLLLLTT____',
+      '____TTLLLLTT____',
+      '____TTTTTTTT____',
+      '___TTTTTTTTTT___',
+      '__TTTTTTTTTTTT__',
+      '___TTTTTTTTTT___',
+      '___TT______TT___',
+      '___RYYYY_YYYY___',
+      '___RRRR___RRR___',
+      '________________',
+      '________________',
+      '________________',
+    ]),
+    // Lv 5+: 왕관
+    decode([
+      '________________',
+      '__Y___Y___Y_____',
+      '__YY_YYY_YY_____',
+      '__YYYYYYYYY_____',
+      '__YYYYYYYYY_____',
+      '__YTYYTYYTY_____',
+      '__YYYYYYYYY_____',
+      '__YYYYYYYYY_____',
+      '___YYYYYYY______',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+      '________________',
+    ]),
+  ];
+
+  const artIdx = user.level <= 2 ? 0 : user.level <= 4 ? 1 : 2;
+  const art = ARTS[artIdx];
+  const artLabel = ['하트', '로켓', '왕관'][artIdx];
+
+  // 레벨 기반 고정 시드 셔플 — 레벨이 같으면 항상 같은 순서로 해금
+  const revealOrder = React.useMemo(() => {
+    const arr = Array.from({ length: total }, (_, i) => i);
+    let s = (user.level * 747796405 + 2891336453) | 0;
+    for (let i = arr.length - 1; i > 0; i--) {
+      s = Math.imul(s, 1664525) + 1013904223 | 0;
+      const j = (s >>> 0) % (i + 1);
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [user.level]);
+
+  const revealed = React.useMemo(
+    () => new Set(revealOrder.slice(0, filled)),
+    [revealOrder, filled]
+  );
+
+  return (
+    <div style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '20px 20px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: t.labelStrong }}>학습 픽셀 여정</span>
+          <span style={{ fontSize: 12, color: t.labelAlt, letterSpacing: '0.20px' }}>Lv.{user.level} — {artLabel}</span>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 700, color: t.primary, letterSpacing: '0.30px' }}>{Math.round(progress * 100)}% 해금</span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, 1fr)`, gap: 3, marginBottom: 14 }}>
+        {Array.from({ length: ROWS }, (_, row) =>
+          Array.from({ length: COLS }, (_, col) => {
+            const idx = row * COLS + col;
+            const isRevealed = revealed.has(idx);
+            const pixelColor = art[row]?.[col];
+            return (
+              <div key={idx} style={{
+                aspectRatio: '1 / 1',
+                borderRadius: 2,
+                background: isRevealed
+                  ? (pixelColor ?? 'rgba(3,174,160,0.12)')
+                  : t.fillAlt,
+                transition: 'background 0.15s',
+              }} />
+            );
+          })
+        )}
+      </div>
+
+      <div style={{ height: 3, borderRadius: 999, background: t.fillNormal, overflow: 'hidden', marginBottom: 6 }}>
+        <div style={{ height: '100%', width: `${progress * 100}%`, background: t.primary, borderRadius: 999 }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, letterSpacing: '0.34px', color: t.labelAssistive }}>
+        <span>{filled} / {total} 픽셀 해금됨</span>
+        <span>다음 레벨까지 {user.xpMax - user.xp} XP</span>
+      </div>
+    </div>
+  );
+}
+
 function MyRoomPage({ dark, isSubscriber, setScreen }) {
   const t = TOKEN;
   const user = USER;
@@ -417,6 +548,14 @@ function MyRoomPage({ dark, isSubscriber, setScreen }) {
                 </button>
               ))}
             </div>
+          </section>
+
+          {/* 학습 픽셀 여정 */}
+          <section>
+            <h2 style={{ margin: '0 0 16px', fontSize: 22, fontWeight: 600, lineHeight: 1.364, letterSpacing: '-0.43px', color: t.labelStrong }}>
+              학습 픽셀 여정
+            </h2>
+            <PixelArtProgress user={user} t={t} />
           </section>
 
           {/* 추천 콘텐츠 */}
