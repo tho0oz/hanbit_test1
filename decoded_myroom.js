@@ -107,7 +107,7 @@ function ProfileSidebar() {
   const user = USER;
   const card = (extra) => ({ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, ...extra });
   return (
-    <aside style={{ width: 260, flexShrink: 0 }}>
+    <aside style={{ width: 260, flexShrink: 0, alignSelf: 'stretch' }}>
       <div style={{ position: 'sticky', top: 72, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ ...card({ padding: 20 }) }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
