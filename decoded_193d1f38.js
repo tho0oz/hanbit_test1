@@ -421,7 +421,11 @@ function Features({ dark }) {
     { num: '02', title: '학습 진도 트래킹', desc: '읽던 책, 보던 강의 — 어디서 멈췄는지 자동으로 이어갑니다.', icon: 'bookmark' },
     { num: '03', title: '큐레이션 러닝패스', desc: '목표 직무와 기술 스택에 맞는 학습 경로를 추천합니다.', icon: 'path' },
     { num: '04', title: '오프라인 저장', desc: '전자책을 다운로드해 인터넷 없이 어디서든 학습하세요.', icon: 'download' },
+    { num: '05', title: '개인화 대시보드', desc: '학습 히스토리와 리포트를 한눈에 — 쓸수록 쌓이는 데이터가 내 성장을 증명합니다.', icon: 'chart' },
+    { num: '06', title: '독점 콘텐츠 · 세미나', desc: '구독자만 볼 수 있는 독점 콘텐츠와 업계 전문가 세미나로 한 발 앞서 나가세요.', icon: 'star-lock' },
+    { num: '07', title: '커뮤니티 접근 권한', desc: '같이 공부하는 사람들과 Q&A, 스터디, 후기를 나누며 구독 지속의 동기를 만드세요.', icon: 'users' },
   ];
+
 
   return (
     <section style={{
@@ -443,7 +447,7 @@ function Features({ dark }) {
         </h2>
 
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24,
         }}>
           {features.map((f) => (
             <div key={f.num} style={{
@@ -499,6 +503,27 @@ function FeatureIcon({ name }) {
     <svg {...common} viewBox="0 0 24 24">
       <path d="M12 4v12m0 0l-4-4m4 4l4-4" />
       <path d="M4 20h16" />
+    </svg>
+  );
+  if (name === 'chart') return (
+    <svg {...common} viewBox="0 0 24 24">
+      <path d="M3 3v18h18" />
+      <path d="M7 16l4-5 4 3 4-6" />
+    </svg>
+  );
+  if (name === 'star-lock') return (
+    <svg {...common} viewBox="0 0 24 24">
+      <path d="M12 2l2.9 6.1L22 9.3l-5 4.9 1.2 6.8L12 17.8l-6.2 3.2L7 14.2 2 9.3l7.1-1.2z" />
+      <circle cx="17" cy="19" r="3" />
+      <path d="M17 17v-1.5a1.5 1.5 0 0 0-3 0V17" />
+    </svg>
+  );
+  if (name === 'users') return (
+    <svg {...common} viewBox="0 0 24 24">
+      <circle cx="9" cy="7" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <path d="M16 3.1a3 3 0 0 1 0 5.8" />
+      <path d="M21 20c0-2.8-1.8-5.1-4.3-5.8" />
     </svg>
   );
   return null;
