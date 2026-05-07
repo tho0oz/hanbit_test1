@@ -305,6 +305,60 @@ function MyHomePage({ dark, isSubscriber, setScreen }) {
               </div>
             </section>
           )}
+
+          {/* 커뮤니티 */}
+          <section>
+            <SectionHeader title="커뮤니티" sub="같이 공부하는 사람들" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[
+                { category: 'Q&A', title: 'Claude Code에서 MCP 연결이 계속 끊기는데 해결법 있나요?', author: '이수현', time: '12분 전', comments: 8, likes: 14, hot: true },
+                { category: '스터디', title: 'Python 데이터 분석 같이 공부할 분 구합니다 (주 2회 온라인)', author: '박지민', time: '1시간 전', comments: 23, likes: 31 },
+                { category: '후기', title: '혼자 공부하는 바이브코딩 완독 후기 — 비개발자도 가능합니다', author: '최유리', time: '3시간 전', comments: 45, likes: 128, hot: true },
+                { category: 'Q&A', title: 'React useEffect 의존성 배열 정확히 언제 비워두나요?', author: '김태호', time: '5시간 전', comments: 12, likes: 27 },
+                { category: '자유', title: '한빛+ 구독 3개월 차 — 이거 진짜 로드맵이 있어야 해요', author: '송민아', time: '어제', comments: 67, likes: 89 },
+              ].map((post, i, arr) => (
+                <div key={i} onClick={() => {}} style={{
+                  padding: '18px 20px',
+                  background: dark ? '#1C1C1F' : t.bgNormal,
+                  border: `1px solid ${borderCol}`,
+                  borderRadius: i === 0 ? '12px 12px 0 0' : i === arr.length - 1 ? '0 0 12px 12px' : 0,
+                  borderTop: i > 0 ? 'none' : `1px solid ${borderCol}`,
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'flex-start', gap: 14,
+                  transition: 'background 0.1s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = dark ? '#242427' : '#f9f9fa'}
+                  onMouseLeave={e => e.currentTarget.style.background = dark ? '#1C1C1F' : t.bgNormal}
+                >
+                  {/* 카테고리 배지 */}
+                  <span style={{
+                    flexShrink: 0, marginTop: 2,
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.3px',
+                    padding: '3px 8px', borderRadius: 4,
+                    background: post.category === 'Q&A' ? `${t.primary}18` : post.category === '스터디' ? 'rgba(98,87,227,0.12)' : post.category === '후기' ? 'rgba(240,177,0,0.12)' : t.fillNormal,
+                    color: post.category === 'Q&A' ? t.primaryHeavy : post.category === '스터디' ? '#6257e3' : post.category === '후기' ? '#b08000' : mutedFg,
+                  }}>{post.category}</span>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4, letterSpacing: '0.20px', color: fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.title}</span>
+                      {post.hot && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: '#ff6900', letterSpacing: '0.3px' }}>🔥 HOT</span>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: mutedFg, letterSpacing: '0.20px' }}>
+                      <span>{post.author}</span>
+                      <span style={{ opacity: 0.4 }}>·</span>
+                      <span>{post.time}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ flexShrink: 0, display: 'flex', gap: 12, fontSize: 12, color: mutedFg, letterSpacing: '0.20px' }}>
+                    <span>💬 {post.comments}</span>
+                    <span>♡ {post.likes}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
 
         {/* 우측 고정 사이드바 */}
