@@ -435,15 +435,29 @@ function PixelArtProgress({ user, t, sidebar }) {
   };
 
   const [currentIdx, setCurrentIdx] = React.useState(user.level - 1);
-  const [paused, setPaused] = React.useState(false);
   const [tooltip, setTooltip] = React.useState(null);
+  const [dragOffset, setDragOffset] = React.useState(0);
+  const dragRef = React.useRef(null); // { startX, dragging }
 
-  // 자동 롤링
-  React.useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => setCurrentIdx(i => (i + 1) % LEVEL_ARTS.length), 3000);
-    return () => clearInterval(id);
-  }, [paused]);
+  const startDrag = (clientX) => {
+    dragRef.current = { startX: clientX, dragging: true, offset: 0 };
+    setTooltip(null);
+  };
+  const moveDrag = (clientX) => {
+    if (!dragRef.current?.dragging) return;
+    const offset = clientX - dragRef.current.startX;
+    dragRef.current.offset = offset;
+    setDragOffset(offset);
+  };
+  const endDrag = () => {
+    if (!dragRef.current?.dragging) return;
+    const offset = dragRef.current.offset;
+    dragRef.current.dragging = false;
+    dragRef.current.offset = 0;
+    if (offset < -40) setCurrentIdx(i => Math.min(i + 1, LEVEL_ARTS.length - 1));
+    else if (offset > 40) setCurrentIdx(i => Math.max(i - 1, 0));
+    setDragOffset(0);
+  };
 
   const cur = LEVEL_ARTS[currentIdx];
   const curFilled = getFilledCount(cur.level);
@@ -462,9 +476,14 @@ function PixelArtProgress({ user, t, sidebar }) {
 
   return (
     <div
-      style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '16px' }}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => { setPaused(false); setTooltip(null); }}
+      style={{ background: t.bgNormal, border: `1px solid ${t.lineAlt}`, borderRadius: 12, padding: '16px', userSelect: 'none' }}
+      onMouseDown={e => startDrag(e.clientX)}
+      onMouseMove={e => moveDrag(e.clientX)}
+      onMouseUp={endDrag}
+      onMouseLeave={() => { endDrag(); setTooltip(null); }}
+      onTouchStart={e => startDrag(e.touches[0].clientX)}
+      onTouchMove={e => moveDrag(e.touches[0].clientX)}
+      onTouchEnd={endDrag}
     >
       {/* 헤더 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -482,7 +501,12 @@ function PixelArtProgress({ user, t, sidebar }) {
       </div>
 
       {/* 픽셀 그리드 */}
-      <div style={{ position: 'relative', display: 'inline-block', marginBottom: 10 }}>
+      <div style={{
+        position: 'relative', display: 'inline-block', marginBottom: 10,
+        transform: `translateX(${Math.max(-30, Math.min(30, dragOffset * 0.4))}px)`,
+        transition: dragOffset === 0 ? 'transform 0.2s' : 'none',
+        cursor: dragOffset !== 0 ? 'grabbing' : 'grab',
+      }}>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: GAP }}>
           {Array.from({ length: ROWS }, (_, row) =>
             Array.from({ length: COLS }, (_, col) => {
