@@ -10,8 +10,8 @@ function LandingPage({ dark, isSubscriber, planCycle, setPlanCycle }) {
     }}>
       <LandingGNB dark={dark} />
       <Hero dark={dark} />
-      <Features dark={dark} />
       <PopularRow dark={dark} />
+      <Features dark={dark} />
       <RecommendTeaser dark={dark} />
       <Plans dark={dark} planCycle={planCycle} setPlanCycle={setPlanCycle} />
       <LandingFooter dark={dark} />
