@@ -99,7 +99,6 @@ function ScreenSwitcher({ screen, setScreen, dark }) {
         { id: 'list', label: '콘텐츠 리스트' },
         { id: 'detail', label: '콘텐츠 상세' },
         { id: 'myhome', label: '개인화 홈' },
-        { id: 'myroom', label: '내 콘텐츠' },
       ].map(s => (
         <button key={s.id} onClick={() => setScreen(s.id)} style={{
           padding: '8px 16px', borderRadius: 999, border: 'none',

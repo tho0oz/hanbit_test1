@@ -66,7 +66,6 @@ function LoggedInGNB({ activeScreen, setScreen }) {
           <nav style={{ display: 'flex', gap: 4 }}>
             {[
               { label: '메인', screen: 'myhome' },
-              { label: '내 콘텐츠', screen: 'myroom' },
             ].map(n => {
               const isActive = n.screen === activeScreen;
               return (
