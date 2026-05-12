@@ -158,6 +158,7 @@ function ProfileSidebar() {
             ))}
           </div>
         </div>
+        <PixelArtProgress user={user} t={t} sidebar />
         <div style={{ ...card({ padding: 20 }) }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.34px', color: t.labelAlt, textTransform: 'uppercase', marginBottom: 14 }}>이번 달</div>
           {[
@@ -367,7 +368,7 @@ function MyHomePage({ dark, isSubscriber, setScreen }) {
   );
 }
 
-function PixelArtProgress({ user, t }) {
+function PixelArtProgress({ user, t, sidebar }) {
   const COLS = 16, ROWS = 16, CELL = 9, GAP = 2;
   const total = COLS * ROWS;
 
