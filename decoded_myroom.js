@@ -143,21 +143,6 @@ function ProfileSidebar() {
             </div>
           </div>
         </div>
-        <div style={{ ...card({ padding: 20 }) }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.34px', color: t.labelAlt, textTransform: 'uppercase', marginBottom: 14 }}>획득한 배지</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {user.badges.map((b, i) => (
-              <div key={i} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '12px 8px', borderRadius: 8,
-                background: t.fillAlt, border: `1px solid ${t.lineAlt}`,
-              }}>
-                <span style={{ fontSize: 22 }}>{b.icon}</span>
-                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.34px', color: t.labelAlt, textAlign: 'center', lineHeight: 1.3 }}>{b.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
         <PixelArtProgress user={user} t={t} sidebar />
         <div style={{ ...card({ padding: 20 }) }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.34px', color: t.labelAlt, textTransform: 'uppercase', marginBottom: 14 }}>이번 달</div>
