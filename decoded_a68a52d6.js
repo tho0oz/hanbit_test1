@@ -70,6 +70,29 @@ function App() {
         <MyHomePage dark={dark} isSubscriber={isSubscriber} setScreen={setScreen} />
       )}
 
+      {screen !== 'recommend' && (
+        <button
+          onClick={() => setScreen('recommend')}
+          style={{
+            position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 999,
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '14px 28px', borderRadius: 999,
+            background: '#03aea0',
+            color: '#fff', border: 'none',
+            fontSize: 15, fontWeight: 700, letterSpacing: '0.20px',
+            cursor: 'pointer', fontFamily: 'Pretendard, sans-serif',
+            boxShadow: '0 8px 32px -6px rgba(3,174,160,0.55), 0 2px 8px rgba(0,0,0,0.12)',
+            whiteSpace: 'nowrap',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(-50%) translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 36px -6px rgba(3,174,160,0.65), 0 4px 12px rgba(0,0,0,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(-50%)'; e.currentTarget.style.boxShadow = '0 8px 32px -6px rgba(3,174,160,0.55), 0 2px 8px rgba(0,0,0,0.12)'; }}
+        >
+          ✦ 맞춤 추천 받기
+        </button>
+      )}
+
       {editMode && (
         <TweaksPanel
           dark={dark} setDark={(v) => { setDark(v); persist({ dark: v }); }}
